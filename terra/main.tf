@@ -1,8 +1,3 @@
-variable "ssh_public_key_path" {
-  description = "Path to your SSH public key"
-  type        = string
-}
-
 resource "azurerm_resource_group" "main" {
   name     = "rg-terraform-demo"
   location = "UK West"
