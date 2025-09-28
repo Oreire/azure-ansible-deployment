@@ -58,7 +58,9 @@ jobs:
         run: terraform import azurerm_public_ip.main /subscriptions/ff4b0f27-bd73-4dbf-a413-78b31e6d283e/resourceGroups/rg-terraform-demo/providers/Microsoft.Network/publicIPAddresses/publicip-terraform-demo
         working-directory: ./terra
 
-      
+      - name: Import existing virtual network
+        run: terraform import azurerm_virtual_network.main /subscriptions/ff4b0f27-bd73-4dbf-a413-78b31e6d283e/resourceGroups/rg-terraform-demo/providers/Microsoft.Network/virtualNetworks/vnet-terraform-demo
+        working-directory: ./terra
 
       # - name: Import existing network interface
       #   run: terraform import azurerm_network_interface.main /subscriptions/ff4b0f27-bd73-4dbf-a413-78b31e6d283e/resourceGroups/rg-terraform-demo/providers/Microsoft.Network/networkInterfaces/nic-terraform-demo
