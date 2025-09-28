@@ -44,6 +44,10 @@ jobs:
       - name: Terraform Init
         run: terraform init
         working-directory: ./terra
+      
+      - name: Create SSH public key file
+        run: echo "${{ secrets.SSH_PUBLIC_KEY }}" > id_rsa.pub
+        working-directory: ./terra
 
       - name: Terraform Plan
         run: terraform plan -var-file="terraform.tfvars" -out=tfplan.out
