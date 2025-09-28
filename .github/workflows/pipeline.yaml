@@ -69,6 +69,13 @@ jobs:
         run: terraform import azurerm_network_interface.main /subscriptions/ff4b0f27-bd73-4dbf-a413-78b31e6d283e/resourceGroups/rg-terraform-demo/providers/Microsoft.Network/networkInterfaces/nic-terraform-demo
         working-directory: ./terra
 
+      - name: Import existing VM into Terraform state
+        run: |
+          terraform import azurerm_linux_virtual_machine.main \
+          /subscriptions/ff4b0f27-bd73-4dbf-a413-78b31e6d283e/resourceGroups/rg-terraform-demo/providers/Microsoft.Compute/virtualMachines/vm-terraform-demo
+        working-directory: ./terra
+
+
       - name: Terraform Plan
         run: terraform plan -var-file="terraform.tfvars" -out=tfplan.out
         working-directory: ./terra
