@@ -44,7 +44,7 @@ jobs:
       - name: Terraform Init
         run: terraform init
         working-directory: ./terra
-      
+
       - name: Create SSH public key file
         run: echo "${{ secrets.SSH_PUBLIC_KEY }}" > id_rsa.pub
         working-directory: ./terra
@@ -53,13 +53,16 @@ jobs:
         run: terraform import azurerm_resource_group.main /subscriptions/ff4b0f27-bd73-4dbf-a413-78b31e6d283e/resourceGroups/rg-terraform-demo
         working-directory: ./terra
 
-      
       - name: Import existing public IP
         run: terraform import azurerm_public_ip.main /subscriptions/ff4b0f27-bd73-4dbf-a413-78b31e6d283e/resourceGroups/rg-terraform-demo/providers/Microsoft.Network/publicIPAddresses/publicip-terraform-demo
         working-directory: ./terra
 
       - name: Import existing virtual network
         run: terraform import azurerm_virtual_network.main /subscriptions/ff4b0f27-bd73-4dbf-a413-78b31e6d283e/resourceGroups/rg-terraform-demo/providers/Microsoft.Network/virtualNetworks/vnet-terraform-demo
+        working-directory: ./terra
+
+      - name: Import existing subnet into Terraform state
+        run: terraform import azurerm_subnet.main /subscriptions/ff4b0f27-bd73-4dbf-a413-78b31e6d283e/resourceGroups/rg-terraform-demo/providers/Microsoft.Network/virtualNetworks/vnet-terraform-demo/subnets/subnet-terraform-demo
         working-directory: ./terra
 
       # - name: Import existing network interface
@@ -103,4 +106,3 @@ jobs:
           else
             echo "All containers are healthy."
           fi
-
