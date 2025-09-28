@@ -1,6 +1,6 @@
 resource "azurerm_resource_group" "main" {
   name     = "rg-terraform-demo"
-  location = "UK South"
+  location = "UK West"
 }
 
 resource "azurerm_virtual_network" "main" {

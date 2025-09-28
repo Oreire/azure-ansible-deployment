@@ -34,7 +34,7 @@ jobs:
         run: |
           cat <<EOF > terraform.tfvars
           resource_group_name = "rg-terraform-demo"
-          location            = "UK South"
+          location            = "UK West"
           vm_size             = "Standard_B2s"
           admin_username      = "azureuser"
           ssh_public_key_path = "id_rsa.pub"
