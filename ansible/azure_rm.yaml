@@ -1,4 +1,4 @@
-plugin: azure_rm
+plugin: azure.azcollection.azure_rm
 include_vm_resource_groups:
   - rg-terraform-demo
 auth_source: env
@@ -11,4 +11,3 @@ hostnames:
   - public_ip
 compose:
   ansible_host: public_ip
-
