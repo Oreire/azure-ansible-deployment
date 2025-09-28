@@ -1,33 +1,40 @@
+---
 - name: Deploy containerised web application
   hosts: all
   become: yes
   vars:
     docker_compose_path: /home/azureuser/docker-compose.yml
+    docker_compose_bin: /usr/local/bin/docker-compose
     health_check_retries: 10
     health_check_interval: 10
 
   tasks:
-    - name: Install Docker
+    - name: Ensure required packages are installed
       apt:
-        name: docker.io
+        name:
+          - docker.io
+          - curl
         state: present
         update_cache: yes
 
     - name: Install Docker Compose
       get_url:
         url: https://github.com/docker/compose/releases/download/v2.24.5/docker-compose-linux-x86_64
-        dest: /usr/local/bin/docker-compose
+        dest: "{{ docker_compose_bin }}"
         mode: '0755'
+      # avoids re-download if file already exists
+      force: no
 
     - name: Copy docker-compose file to VM
       copy:
         src: ../app/docker-compose.yml
         dest: "{{ docker_compose_path }}"
         owner: azureuser
+        group: azureuser
         mode: '0644'
 
     - name: Run Docker Compose
-      command: docker-compose up -d
+      command: "{{ docker_compose_bin }} up -d"
       args:
         chdir: "{{ docker_compose_path | dirname }}"
 
@@ -35,7 +42,7 @@
       shell: |
         for i in $(seq 1 {{ health_check_retries }}); do
           STATUS=$(docker inspect --format='{{.State.Health.Status}}' web 2>/dev/null || echo "missing")
-          if [ "$STATUS" == "healthy" ]; then exit 0; fi
+          if [ "$STATUS" = "healthy" ]; then exit 0; fi
           sleep {{ health_check_interval }}
         done
         exit 1
@@ -47,11 +54,10 @@
       shell: |
         for i in $(seq 1 {{ health_check_retries }}); do
           STATUS=$(docker inspect --format='{{.State.Health.Status}}' db 2>/dev/null || echo "missing")
-          if [ "$STATUS" == "healthy" ]; then exit 0; fi
+          if [ "$STATUS" = "healthy" ]; then exit 0; fi
           sleep {{ health_check_interval }}
         done
         exit 1
       register: db_health
       failed_when: db_health.rc != 0
       changed_when: false
-
