@@ -49,6 +49,10 @@ jobs:
         run: echo "${{ secrets.SSH_PUBLIC_KEY }}" > id_rsa.pub
         working-directory: ./terra
 
+      - name: Import existing resource group into Terraform state
+        run: terraform import azurerm_resource_group.main /subscriptions/ff4b0f27-bd73-4dbf-a413-78b31e6d283e/resourceGroups/rg-terraform-demo
+        working-directory: ./terra
+
       - name: Terraform Plan
         run: terraform plan -var-file="terraform.tfvars" -out=tfplan.out
         working-directory: ./terra
