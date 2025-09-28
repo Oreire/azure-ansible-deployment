@@ -1,4 +1,3 @@
----
 # Inventory for Ansible using Azure Resource Manager plugin
 plugin: azure.azcollection.azure_rm
 
@@ -6,7 +5,7 @@ plugin: azure.azcollection.azure_rm
 include_vm_resource_groups:
   - rg-terraform-demo
 
-# Use environment variables from GitHub Actions workflow for auth
+# Use environment variables from GitHub Actions workflow for authentication
 auth_source: env
 
 # Only target Linux VMs (skip Windows/admin VMs)

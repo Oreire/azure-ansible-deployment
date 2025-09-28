@@ -1,4 +1,3 @@
----
 name: Azure Containerised Deployment
 
 on:
@@ -50,30 +49,15 @@ jobs:
         run: echo "${{ secrets.SSH_PUBLIC_KEY }}" > id_rsa.pub
         working-directory: ./terra
 
-      - name: Import existing resource group
-        run: terraform import azurerm_resource_group.main /subscriptions/ff4b0f27-bd73-4dbf-a413-78b31e6d283e/resourceGroups/rg-terraform-demo
-        working-directory: ./terra
-
-      - name: Import existing public IP
-        run: terraform import azurerm_public_ip.main /subscriptions/ff4b0f27-bd73-4dbf-a413-78b31e6d283e/resourceGroups/rg-terraform-demo/providers/Microsoft.Network/publicIPAddresses/publicip-terraform-demo
-        working-directory: ./terra
-
-      - name: Import existing virtual network
-        run: terraform import azurerm_virtual_network.main /subscriptions/ff4b0f27-bd73-4dbf-a413-78b31e6d283e/resourceGroups/rg-terraform-demo/providers/Microsoft.Network/virtualNetworks/vnet-terraform-demo
-        working-directory: ./terra
-
-      - name: Import existing subnet
-        run: terraform import azurerm_subnet.main /subscriptions/ff4b0f27-bd73-4dbf-a413-78b31e6d283e/resourceGroups/rg-terraform-demo/providers/Microsoft.Network/virtualNetworks/vnet-terraform-demo/subnets/subnet-terraform-demo
-        working-directory: ./terra
-
-      - name: Import existing network interface
-        run: terraform import azurerm_network_interface.main /subscriptions/ff4b0f27-bd73-4dbf-a413-78b31e6d283e/resourceGroups/rg-terraform-demo/providers/Microsoft.Network/networkInterfaces/nic-terraform-demo
-        working-directory: ./terra
-
-      - name: Import existing VM
+      # Import existing resources
+      - name: Terraform Import Existing Resources
         run: |
-          terraform import azurerm_linux_virtual_machine.main \
-          /subscriptions/ff4b0f27-bd73-4dbf-a413-78b31e6d283e/resourceGroups/rg-terraform-demo/providers/Microsoft.Compute/virtualMachines/vm-terraform-demo
+          terraform import azurerm_resource_group.main /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/rg-terraform-demo
+          terraform import azurerm_public_ip.main /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/rg-terraform-demo/providers/Microsoft.Network/publicIPAddresses/publicip-terraform-demo
+          terraform import azurerm_virtual_network.main /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/rg-terraform-demo/providers/Microsoft.Network/virtualNetworks/vnet-terraform-demo
+          terraform import azurerm_subnet.main /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/rg-terraform-demo/providers/Microsoft.Network/virtualNetworks/vnet-terraform-demo/subnets/subnet-terraform-demo
+          terraform import azurerm_network_interface.main /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/rg-terraform-demo/providers/Microsoft.Network/networkInterfaces/nic-terraform-demo
+          terraform import azurerm_linux_virtual_machine.main /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/rg-terraform-demo/providers/Microsoft.Compute/virtualMachines/vm-terraform-demo
         working-directory: ./terra
 
       - name: Terraform Plan
@@ -84,17 +68,17 @@ jobs:
         run: terraform apply tfplan.out
         working-directory: ./terra
 
-      - name: Install Ansible and dependencies
+      - name: Install Ansible and Azure dependencies
         run: |
           sudo apt update
           sudo apt install -y ansible python3-pip jq
           pip3 install 'ansible[azure]'
           ansible-galaxy collection install -r collections/requirements.yaml
 
-      - name: Verify Azure inventory plugin is available
+      - name: Verify Azure inventory plugin
         run: ansible-doc -t inventory azure.azcollection.azure_rm
 
-      - name: Parse AZURE_CREDENTIALS for Ansible
+      - name: Export Azure credentials for Ansible
         id: azure-creds
         run: |
           echo '${{ secrets.AZURE_CREDENTIALS }}' > azure.json
@@ -103,16 +87,16 @@ jobs:
           echo "AZURE_SUBSCRIPTION_ID=$(jq -r .subscriptionId azure.json)" >> $GITHUB_ENV
           echo "AZURE_TENANT=$(jq -r .tenantId azure.json)" >> $GITHUB_ENV
 
-      # 🔍 Debug: Show inventory discovery with full plugin context
+      # Debug: inventory
       - name: Debug Ansible inventory
         run: |
           echo ">>> Running ansible-inventory debug..."
-          ansible-inventory -i ansible/azure_rm.yaml --list -vvv
+          ansible-inventory -i ansible/azure_rm.yaml --inventory-plugin azure.azcollection.azure_rm --list -vvv
           echo ">>> Graph view:"
-          ansible-inventory -i ansible/azure_rm.yaml --graph
+          ansible-inventory -i ansible/azure_rm.yaml --inventory-plugin azure.azcollection.azure_rm --graph
 
       - name: Run Ansible Playbook
-        run: ansible-playbook -i ansible/azure_rm.yaml ansible/depplaybook.yaml -vvv
+        run: ansible-playbook -i ansible/azure_rm.yaml --inventory-plugin azure.azcollection.azure_rm ansible/depplaybook.yaml -vvv
 
       - name: Validate container health
         run: |
