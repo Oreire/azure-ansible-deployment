@@ -61,6 +61,10 @@ jobs:
         run: terraform import azurerm_public_ip.main /subscriptions/ff4b0f27-bd73-4dbf-a413-78b31e6d283e/resourceGroups/rg-terraform-demo/providers/Microsoft.Network/publicIPAddresses/publicip-terraform-demo
         working-directory: ./terra
 
+      - name: Import existing subnet
+        run: terraform import azurerm_subnet.main /subscriptions/ff4b0f27-bd73-4dbf-a413-78b31e6d283e/resourceGroups/rg-terraform-demo/providers/Microsoft.Network/virtualNetworks/vnet-terraform-demo/subnets/subnet-terraform-demo
+        working-directory: ./terra
+
       - name: Terraform Plan
         run: terraform plan -var-file="terraform.tfvars" -out=tfplan.out
         working-directory: ./terra
