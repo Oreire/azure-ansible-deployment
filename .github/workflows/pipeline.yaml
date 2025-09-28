@@ -1,0 +1,71 @@
+name: Azure Containerised Deployment
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  TF_VAR_resource_group_name: rg-terraform-demo
+  TF_VAR_location: UK South
+  TF_VAR_vm_size: Standard_B2s
+  TF_VAR_admin_username: azureuser
+  TF_VAR_ssh_public_key_path: id_rsa.pub
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.6.0
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Plan
+        run: terraform plan -var-file="terraform.tfvars" -out=tfplan.out
+
+      - name: Terraform Apply
+        run: terraform apply tfplan.out
+
+      - name: Install Ansible and Azure plugin
+        run: |
+          sudo apt update
+          sudo apt install -y ansible python3-pip jq
+          pip3 install 'ansible[azure]'
+
+      - name: Parse AZURE_CREDENTIALS for Ansible
+        id: azure-creds
+        run: |
+          echo '${{ secrets.AZURE_CREDENTIALS }}' > azure.json
+          echo "AZURE_CLIENT_ID=$(jq -r .clientId azure.json)" >> $GITHUB_ENV
+          echo "AZURE_SECRET=$(jq -r .clientSecret azure.json)" >> $GITHUB_ENV
+          echo "AZURE_SUBSCRIPTION_ID=$(jq -r .subscriptionId azure.json)" >> $GITHUB_ENV
+          echo "AZURE_TENANT=$(jq -r .tenantId azure.json)" >> $GITHUB_ENV
+
+      - name: Run Ansible Playbook
+        run: |
+          ansible-playbook -i ansible/azure_rm.yaml ansible/depplaybook.yaml
+
+      - name: Validate container health
+        run: |
+          unhealthy=$(docker ps --filter "health=unhealthy" -q)
+          if [ -n "$unhealthy" ]; then
+            echo "Unhealthy containers detected:"
+            docker inspect --format='{{.Name}}: {{json .State.Health}}' $unhealthy
+            exit 1
+          else
+            echo "All containers are healthy."
+          fi
+
