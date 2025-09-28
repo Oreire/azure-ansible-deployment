@@ -1,7 +1,7 @@
 plugin: azure_rm
 include_vm_resource_groups:
   - rg-terraform-demo
-auth_source: auto
+auth_source: env
 keyed_groups:
   - key: tags.role
     prefix: role
