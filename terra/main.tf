@@ -67,7 +67,7 @@ resource "azurerm_linux_virtual_machine" "main" {
   source_image_reference {
     publisher = "Canonical"
     offer     = "UbuntuServer"
-    sku       = "22_04-lts" # ✅ More widely supported than gen2
+    sku       = "22_04-lts"
     version   = "latest"
   }
 
