@@ -1,27 +1,32 @@
 plugin: azure.azcollection.azure_rm
 
-# Limit discovery to the resource group created by Terraform
+# Restrict discovery to the Terraform-created resource group
 include_vm_resource_groups:
   - rg-terraform-demo
 
-# Use environment variables for authentication (set in the workflow)
+# Use environment variables set in GitHub Actions workflow
 auth_source: env
 
-# Optionally filter for only Linux VMs (avoids Windows/admin VMs being targeted)
+# Only target Linux VMs (skip Windows or other admin VMs)
 include_vm_filters:
   - os_type: Linux
 
-# Create dynamic groups based on VM tags and location
+# Create Ansible groups dynamically
 keyed_groups:
   - key: tags.role
     prefix: role
   - key: location
     prefix: azure
 
-# Use public IPs for connecting to VMs
+# Use the VM's public IP for connecting
 hostnames:
   - public_ip
 
-# Map the public IP into ansible_host
+# Tell Ansible which field to use for ansible_host
 compose:
   ansible_host: public_ip
+
+# Ensure SSH user is set from workflow environment
+# (maps to TF_VAR_admin_username / azureuser)
+variables:
+  ansible_user: "{{ lookup('env', 'TF_VAR_admin_username') | default('azureuser') }}"

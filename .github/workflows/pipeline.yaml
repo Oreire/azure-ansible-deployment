@@ -102,11 +102,16 @@ jobs:
           echo "AZURE_SUBSCRIPTION_ID=$(jq -r .subscriptionId azure.json)" >> $GITHUB_ENV
           echo "AZURE_TENANT=$(jq -r .tenantId azure.json)" >> $GITHUB_ENV
 
+      # 🔍 Debug: Show inventory discovery with full plugin context
       - name: Debug Ansible inventory
-        run: ansible-inventory -i ansible/azure_rm.yaml --graph
+        run: |
+          echo ">>> Running ansible-inventory debug..."
+          ansible-inventory -i ansible/azure_rm.yaml --list --inventory-plugin azure.azcollection.azure_rm -vvv
+          echo ">>> Graph view:"
+          ansible-inventory -i ansible/azure_rm.yaml --graph --inventory-plugin azure.azcollection.azure_rm
 
       - name: Run Ansible Playbook
-        run: ansible-playbook -i ansible/azure_rm.yaml ansible/depplaybook.yaml
+        run: ansible-playbook -i ansible/azure_rm.yaml ansible/depplaybook.yaml --inventory-plugin azure.azcollection.azure_rm -vvv
 
       - name: Validate container health
         run: |
