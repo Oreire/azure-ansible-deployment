@@ -66,9 +66,9 @@ resource "azurerm_linux_virtual_machine" "main" {
 
   source_image_reference {
   publisher = "Canonical"
-  offer     = "UbuntuServer"
-  sku       = "18.10"
-  version   = "latest"
+  offer     = "0001-com-ubuntu-server-focal"
+  sku       = "20_04-lts-gen2"
+  version   = "20.04.202505070"
 }
 
   depends_on = [
