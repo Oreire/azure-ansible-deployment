@@ -106,12 +106,12 @@ jobs:
       - name: Debug Ansible inventory
         run: |
           echo ">>> Running ansible-inventory debug..."
-          ansible-inventory -i ansible/azure_rm.yaml --list --inventory-plugin azure.azcollection.azure_rm -vvv
+          ansible-inventory -i ansible/azure_rm.yaml --list -vvv
           echo ">>> Graph view:"
-          ansible-inventory -i ansible/azure_rm.yaml --graph --inventory-plugin azure.azcollection.azure_rm
+          ansible-inventory -i ansible/azure_rm.yaml --graph
 
       - name: Run Ansible Playbook
-        run: ansible-playbook -i ansible/azure_rm.yaml ansible/depplaybook.yaml --inventory-plugin azure.azcollection.azure_rm -vvv
+        run: ansible-playbook -i ansible/azure_rm.yaml ansible/depplaybook.yaml -vvv
 
       - name: Validate container health
         run: |
