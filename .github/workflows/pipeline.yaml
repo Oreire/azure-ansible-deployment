@@ -75,7 +75,6 @@ jobs:
           /subscriptions/ff4b0f27-bd73-4dbf-a413-78b31e6d283e/resourceGroups/rg-terraform-demo/providers/Microsoft.Compute/virtualMachines/vm-terraform-demo
         working-directory: ./terra
 
-
       - name: Terraform Plan
         run: terraform plan -var-file="terraform.tfvars" -out=tfplan.out
         working-directory: ./terra
@@ -84,11 +83,12 @@ jobs:
         run: terraform apply tfplan.out
         working-directory: ./terra
 
-      - name: Install Ansible and Azure plugin
+      - name: Install Ansible and Azure collection
         run: |
           sudo apt update
           sudo apt install -y ansible python3-pip jq
           pip3 install 'ansible[azure]'
+          ansible-galaxy collection install azure.azcollection
 
       - name: Parse AZURE_CREDENTIALS for Ansible
         id: azure-creds
@@ -99,9 +99,11 @@ jobs:
           echo "AZURE_SUBSCRIPTION_ID=$(jq -r .subscriptionId azure.json)" >> $GITHUB_ENV
           echo "AZURE_TENANT=$(jq -r .tenantId azure.json)" >> $GITHUB_ENV
 
+      - name: Debug Ansible inventory
+        run: ansible-inventory -i ansible/azure_rm.yaml --graph
+
       - name: Run Ansible Playbook
-        run: |
-          ansible-playbook -i ansible/azure_rm.yaml ansible/depplaybook.yaml
+        run: ansible-playbook -i ansible/azure_rm.yaml ansible/depplaybook.yaml
 
       - name: Validate container health
         run: |
