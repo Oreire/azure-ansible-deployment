@@ -49,7 +49,7 @@ jobs:
         run: echo "${{ secrets.SSH_PUBLIC_KEY }}" > id_rsa.pub
         working-directory: ./terra
 
-      - name: Import existing resource group into Terraform state
+      - name: Import existing resource group
         run: terraform import azurerm_resource_group.main /subscriptions/ff4b0f27-bd73-4dbf-a413-78b31e6d283e/resourceGroups/rg-terraform-demo
         working-directory: ./terra
 
@@ -61,7 +61,7 @@ jobs:
         run: terraform import azurerm_virtual_network.main /subscriptions/ff4b0f27-bd73-4dbf-a413-78b31e6d283e/resourceGroups/rg-terraform-demo/providers/Microsoft.Network/virtualNetworks/vnet-terraform-demo
         working-directory: ./terra
 
-      - name: Import existing subnet into Terraform state
+      - name: Import existing subnet
         run: terraform import azurerm_subnet.main /subscriptions/ff4b0f27-bd73-4dbf-a413-78b31e6d283e/resourceGroups/rg-terraform-demo/providers/Microsoft.Network/virtualNetworks/vnet-terraform-demo/subnets/subnet-terraform-demo
         working-directory: ./terra
 
@@ -69,7 +69,7 @@ jobs:
         run: terraform import azurerm_network_interface.main /subscriptions/ff4b0f27-bd73-4dbf-a413-78b31e6d283e/resourceGroups/rg-terraform-demo/providers/Microsoft.Network/networkInterfaces/nic-terraform-demo
         working-directory: ./terra
 
-      - name: Import existing VM into Terraform state
+      - name: Import existing VM
         run: |
           terraform import azurerm_linux_virtual_machine.main \
           /subscriptions/ff4b0f27-bd73-4dbf-a413-78b31e6d283e/resourceGroups/rg-terraform-demo/providers/Microsoft.Compute/virtualMachines/vm-terraform-demo
@@ -83,12 +83,15 @@ jobs:
         run: terraform apply tfplan.out
         working-directory: ./terra
 
-      - name: Install Ansible and Azure collection
+      - name: Install Ansible and dependencies
         run: |
           sudo apt update
           sudo apt install -y ansible python3-pip jq
           pip3 install 'ansible[azure]'
-          ansible-galaxy collection install azure.azcollection
+          ansible-galaxy collection install -r collections/requirements.yaml
+
+      - name: Verify Azure inventory plugin is available
+        run: ansible-doc -t inventory azure.azcollection.azure_rm
 
       - name: Parse AZURE_CREDENTIALS for Ansible
         id: azure-creds
