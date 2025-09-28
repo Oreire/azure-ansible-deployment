@@ -1,3 +1,8 @@
+variable "ssh_public_key_path" {
+  description = "Path to your SSH public key"
+  type        = string
+}
+
 resource "azurerm_resource_group" "main" {
   name     = "rg-terraform-demo"
   location = "UK West"
@@ -21,7 +26,7 @@ resource "azurerm_public_ip" "main" {
   name                = "publicip-terraform-demo"
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
-  allocation_method   = "Static" # was "Dynamic"
+  allocation_method   = "Static"
   sku                 = "Standard"
 }
 
@@ -36,6 +41,11 @@ resource "azurerm_network_interface" "main" {
     private_ip_address_allocation = "Dynamic"
     public_ip_address_id          = azurerm_public_ip.main.id
   }
+
+  depends_on = [
+    azurerm_subnet.main,
+    azurerm_public_ip.main
+  ]
 }
 
 resource "azurerm_linux_virtual_machine" "main" {
@@ -46,17 +56,12 @@ resource "azurerm_linux_virtual_machine" "main" {
   admin_username      = "azureuser"
 
   network_interface_ids = [
-    azurerm_network_interface.main.id,
+    azurerm_network_interface.main.id
   ]
 
   admin_ssh_key {
     username   = "azureuser"
-    # public_key = file("/c/Users/ajayi/.ssh/id_rsa.pub")
-    # public_key = file("${path.module}/id_rsa.pub")
     public_key = file(var.ssh_public_key_path)
-
-
-
   }
 
   os_disk {
@@ -65,11 +70,14 @@ resource "azurerm_linux_virtual_machine" "main" {
   }
 
   source_image_reference {
-  publisher = "Canonical"
-  offer     = "UbuntuServer"
-  sku       = "22_04-lts-gen2"
-  version   = "latest"
-}
+    publisher = "Canonical"
+    offer     = "UbuntuServer"
+    sku       = "22_04-lts" # ✅ More widely supported than gen2
+    version   = "latest"
+  }
 
+  depends_on = [
+    azurerm_network_interface.main
+  ]
 }
 
