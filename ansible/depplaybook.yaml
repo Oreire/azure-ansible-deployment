@@ -22,8 +22,7 @@
         url: https://github.com/docker/compose/releases/download/v2.24.5/docker-compose-linux-x86_64
         dest: "{{ docker_compose_bin }}"
         mode: '0755'
-      # avoids re-download if file already exists
-      force: no
+        force: false   # ✅ use `false` instead of `no`
 
     - name: Copy docker-compose file to VM
       copy:
@@ -41,7 +40,7 @@
     - name: Wait for healthy web container
       shell: |
         for i in $(seq 1 {{ health_check_retries }}); do
-          STATUS=$(docker inspect --format='{{.State.Health.Status}}' web 2>/dev/null || echo "missing")
+          STATUS=$(docker inspect --format='{{'{{'}}.State.Health.Status{{'}}'}}' web 2>/dev/null || echo "missing")
           if [ "$STATUS" = "healthy" ]; then exit 0; fi
           sleep {{ health_check_interval }}
         done
@@ -53,7 +52,7 @@
     - name: Wait for healthy db container
       shell: |
         for i in $(seq 1 {{ health_check_retries }}); do
-          STATUS=$(docker inspect --format='{{.State.Health.Status}}' db 2>/dev/null || echo "missing")
+          STATUS=$(docker inspect --format='{{'{{'}}.State.Health.Status{{'}}'}}' db 2>/dev/null || echo "missing")
           if [ "$STATUS" = "healthy" ]; then exit 0; fi
           sleep {{ health_check_interval }}
         done
