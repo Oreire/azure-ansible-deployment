@@ -65,14 +65,41 @@ resource "azurerm_linux_virtual_machine" "main" {
   }
 
   source_image_reference {
-  publisher = "Canonical"
-  offer     = "0001-com-ubuntu-server-focal"
-  sku       = "20_04-lts-gen2"
-  version   = "20.04.202505070"
-}
+    publisher = "Canonical"
+    offer     = "0001-com-ubuntu-server-focal"
+    sku       = "20_04-lts-gen2"
+    version   = "20.04.202505070"
+  }
 
   depends_on = [
     azurerm_network_interface.main
   ]
 }
 
+resource "azurerm_network_security_group" "ssh" {
+  name                = "nsg-terraform-ssh"
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+
+  security_rule {
+    name                       = "Allow-SSH"
+    priority                   = 100
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "22"
+    source_address_prefix      = "0.0.0.0/0"
+    destination_address_prefix = "*"
+  }
+}
+
+resource "azurerm_network_interface_security_group_association" "main" {
+  network_interface_id      = azurerm_network_interface.main.id
+  network_security_group_id = azurerm_network_security_group.ssh.id
+
+  depends_on = [
+    azurerm_network_interface.main,
+    azurerm_network_security_group.ssh
+  ]
+}
